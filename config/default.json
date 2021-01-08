@@ -1,0 +1,4 @@
+{
+    "mongoURI": "mongodb+srv://deep123:deep123@devconnector.1g3yu.mongodb.net/MERN?retryWrites=true&w=majority",
+    "jwtToken": "mysecrettoken"
+}
