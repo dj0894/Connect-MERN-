@@ -1,5 +1,7 @@
 const e = require('express');
 const express = require('express');
+const request = require('request');
+const config = require('config');
 const { check, validationResult } = require('express-validator');
 const router = express.Router();
 const auth = require('../../middleware/auth');
@@ -225,6 +227,106 @@ router.delete('/experience/:exp_id', auth,
             res.status(500).send('Server Error');
         }
     });
+
+//@route    PUT api/profile/education  // we can also used POST but PUT is used as we are just updating profile
+//@desc     add education in profile
+//@access   Private
+router.put('/education', auth, [
+    check('school', ' School is required').not().isEmpty(),
+    check('degree', ' Degree is required').not().isEmpty(),
+    check('from', "From is required").not().isEmpty(),
+    check('fieldofstudy', 'fieldofstudy is required').not().isEmpty()],
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            console.log(errors);
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const {
+            school,
+            degree,
+            fieldofstudy,
+            from,
+            to,
+            description
+        } = req.body;
+
+        const newEdu = {
+            school,
+            degree,
+            fieldofstudy,
+            from,
+            to,
+            description
+        };
+
+        try {
+
+            const profile = await Profile.findOne({ user: req.user.id });
+            console.log(newEdu);
+            profile.education.unshift(newEdu); //unshift add push element at start of array whereas put push element at end of the array
+            await profile.save();
+            res.json(profile);
+
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+
+
+//@route    DELETE api/profile/education/:edu_id
+//@desc     delete education from profile
+//@access   Private
+router.delete('/education/:edu_id', auth,
+    async (req, res) => {
+        try {
+            const profile = await Profile.findOne({ user: req.user.id });
+            //get the experinence index to  delete
+            const removeIndex = profile.education.map(item => item.id).indexOf(req.params.edu_id);
+            profile.education.splice(removeIndex, 1);
+            profile.save();
+            res.json(profile);
+
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+
+//@route    GET api/profile/github/:username
+//@desc     get
+//@access   public 
+router.get('/github/:username',
+    async (req, res) => {
+        try {
+            //Hitting https://api.github.com/users/USERNAME/repos will list public repositories for the user USERNAME.
+            const options = {
+                uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=created:asc&client_id=${config.get('githubClientId')}&client_secret=${config.get('githubSecret')}`,
+                method: 'GET',
+                headers: { 'user-agent': 'node.js' }
+            };
+
+            request(options, (error, response, body) => {
+                if (error) {
+                    console.error(error);
+                }
+
+                if (response.statusCode != 200) {
+                    return res.status(404).json({ msg: 'Github profile not found' });
+                }
+
+                res.json(JSON.parse(body));// body is converted to JSON as body we get will be in string
+
+            });
+
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+
 
 
 module.exports = router;
