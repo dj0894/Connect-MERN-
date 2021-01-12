@@ -158,4 +158,53 @@ router.delete('/', auth, async (req, res) => {
 });
 
 
+//@route    PUT api/profile/experience  // we can also used POST but PUT is used as we are just updating profile
+//@desc     add experience in profile
+//@access   Private
+router.put('/experience', auth, [
+    check('title', ' Title is required').not().isEmpty(),
+    check('company', ' Company is required').not().isEmpty(),
+    check('from', 'From Date is required').not().isEmpty()],
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            console.log(errors);
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const {
+            title,
+            company,
+            location,
+            from,
+            to,
+            current,
+            description
+        } = req.body;
+
+        const newExp = {
+            title,
+            company,
+            location,
+            from,
+            to,
+            current,
+            description
+        };
+
+        try {
+
+            const profile = await Profile.findOne({ user: req.user.id });
+            console.log(newExp);
+            profile.experience.unshift(newExp); //unshift add push element at start of array whereas put push element at end of the array
+            await profile.save();
+            res.json(profile);
+
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    });
+
+
 module.exports = router;
