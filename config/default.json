@@ -1,4 +1,6 @@
 {
     "mongoURI": "mongodb+srv://deep123:deep123@devconnector.1g3yu.mongodb.net/MERN?retryWrites=true&w=majority",
-    "jwtToken": "mysecrettoken"
+    "jwtToken": "mysecrettoken",
+    "githubClientId": "146cbee26a121e5803a8",
+    "githubSecret": "abc7c3556c3e9ac428871f12c58001a99ce71ab5"
 }
